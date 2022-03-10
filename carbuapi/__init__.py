@@ -20,10 +20,12 @@
 
 import datetime
 import json
-from typing import Optional, List, Tuple
-from .consts import PRODUCTS
-import requests
+from typing import List, Optional, Tuple
+
 import haversine
+import requests
+
+from .consts import PRODUCTS
 
 BASE_URL = (
     "https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes"
@@ -70,9 +72,7 @@ class CarbuAPI:
         user_lat_lng: Optional[Tuple[float, float]],
     ):
         url = self.build_url(codprov=codprov)
-        with open("tests/global.json") as fh:
-            buffer = fh.read()
-        # buffer = self.fetch(url)
+        buffer = self.fetch(url)
         data = self.parse(buffer)
 
         if products is None and max_distance is None:
@@ -128,7 +128,7 @@ class CarbuAPI:
         def _float(s):
             return float(s.replace(",", "."))
 
-        products = {name: item.get(f"Precio {name}", None) for (_, name) in PRODUCTS}
+        products = {name: item.get(f"Precio {name}", None) for (name, _) in PRODUCTS}
         for k in list(item.keys()):
             if k.startswith("Precio "):
                 del item[k]

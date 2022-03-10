@@ -32,8 +32,9 @@ def main():
     parser.add_argument(
         "--product",
         action="extend",
+        dest="products",
         nargs="+",
-        choices=[x[0] for x in PRODUCTS],
+        choices=[slug for (name, slug) in PRODUCTS],
         required=False,
     )
     parser.add_argument(
@@ -58,9 +59,9 @@ def main():
     args = parser.parse_args()
 
     products = []
-    if args.product:
-        m = dict(PRODUCTS)
-        products = [m[x] for x in args.product]
+    if args.products:
+        m = {slug: name for (name, slug) in PRODUCTS}
+        products = [m[slug] for slug in args.products]
 
     if args.max_distance:
         if not args.user_lat and args.user_lng:
