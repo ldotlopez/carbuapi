@@ -19,17 +19,68 @@
 
 
 import argparse
+import sys
 from pprint import pprint as pp
+
 from . import CarbuAPI
+from .consts import PRODUCTS
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--codprov", required=False)
+    parser.add_argument(
+        "--product",
+        action="extend",
+        nargs="+",
+        choices=[x[0] for x in PRODUCTS],
+        required=False,
+    )
+    parser.add_argument(
+        "--max-distance",
+        type=float,
+        help="Max distance in km.",
+        required=False,
+    )
+    parser.add_argument(
+        "--user-lat",
+        type=str,
+        help="User latitude",
+        required=False,
+    )
+    parser.add_argument(
+        "--user-lng",
+        type=str,
+        help="User longuitude",
+        required=False,
+    )
+
     args = parser.parse_args()
 
+    products = []
+    if args.product:
+        m = dict(PRODUCTS)
+        products = [m[x] for x in args.product]
+
+    if args.max_distance:
+        if not args.user_lat and args.user_lng:
+            print("User lat/lng is required", file=sys.stderr)
+            return 1
+
+        user_lat_lng = (float(args.user_lat), float(args.user_lng))
+
+    else:
+        user_lat_lng = None
+
     api = CarbuAPI()
-    pp(api.query(codprov=args.codprov))
+    pp(
+        api.query(
+            codprov=args.codprov,
+            products=products,
+            max_distance=args.max_distance,
+            user_lat_lng=user_lat_lng,
+        )
+    )
 
 
 if __name__ == "__main__":
