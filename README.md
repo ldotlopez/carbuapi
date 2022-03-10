@@ -1,9 +1,8 @@
 # CarbuAPI
 
 [![Upload Python Package](https://github.com/ldotlopez/carbuapi/actions/workflows/python-publish.yml/badge.svg)](https://github.com/ldotlopez/carbuapi/actions/workflows/python-publish.yml)
-[![CodeQL](https://github.com/ldotlopez/carbuapi/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/ldotlopez/carbuapi/actions/workflows/codeql-analysis.yml)
 
-Access to [https://sedeaplicaciones.minetur.gob.es/](https://sedeaplicaciones.minetur.gob.es/) fuel prices
+Access to [https://sedeaplicaciones.minetur.gob.es/](https://sedeaplicaciones.minetur.gob.es/) fuel prices (Spain)
 
 **Useful links**
 
