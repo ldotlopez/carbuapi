@@ -20,18 +20,45 @@
 
 import datetime
 import json
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict, Any, Iterable
 
 import haversine
 import requests
 
 from .consts import PRODUCTS
+import dataclasses
 
 BASE_URL = (
     "https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes"
     "/PreciosCarburantes"
     "/EstacionesTerrestres/{filters}#response-json"
 )
+
+
+@dataclasses.dataclass
+class Location:
+    address: str
+    city: str
+    latitude: float
+    longuitude: float
+    province: str
+    distance: Optional[float] = None
+
+
+@dataclasses.dataclass
+class Station:
+    name: str
+    code: str
+    products: Dict[str, float]
+    location: Location
+    misc: Dict[str, Any]
+
+
+@dataclasses.dataclass
+class QueryResult:
+    date: datetime.datetime
+    stations: List[Station]
+    advisory: Optional[str] = None
 
 
 class CarbuAPI:
@@ -44,24 +71,22 @@ class CarbuAPI:
 
         return BASE_URL.format(filters=filtersstr)
 
-    def fetch(self, url):
+    def fetch(self, url: str) -> str:
         return requests.get(url).text
 
-    def parse(self, buff):
+    def parse(self, buff: str) -> QueryResult:
         data = json.loads(buff)
 
         resultcode = data.get("ResultadoConsulta", "").upper()
         if resultcode != "OK":
             raise DataError(f"ResultadoConsulta: {resultcode}")
 
-        meta = {
-            "Date": datetime.datetime.strptime(data["Fecha"], "%d/%m/%Y %H:%M:%S"),
-            "Advisory": data.get("Nota"),
-        }
-
-        prices = [self.parse_item(x) for x in data["ListaEESSPrecio"]]
-
-        return {"Meta": meta, "Prices": prices}
+        ret = QueryResult(
+            date=datetime.datetime.strptime(data["Fecha"], "%d/%m/%Y %H:%M:%S"),
+            advisory=data.get("Nota"),
+            stations=[self.parse_item(x) for x in data["ListaEESSPrecio"]],
+        )
+        return ret
 
     def query(
         self,
@@ -78,53 +103,59 @@ class CarbuAPI:
         if products is None and max_distance is None:
             return data
 
-        prices = data["Prices"]
+        tmp: Iterable[Station] = data.stations
 
+        # Filter products
         if products:
-            prices = self._filter_by_products(prices, products=products)
+            tmp = self._filter_by_products(tmp, products=products)
 
         # Filter by distances
         if max_distance and user_lat_lng:
-            prices = self._filter_by_distance(
-                prices, max_distance=max_distance, user_lat_lng=user_lat_lng
+            tmp = self._filter_by_distance(
+                tmp, max_distance=max_distance, user_lat_lng=user_lat_lng
             )
 
-        data["Prices"] = list(prices)
+        data.stations = list(tmp)
         return data
 
-    def _filter_by_products(self, collection, *, products: List[str]):
+    def _filter_by_products(
+        self, collection: Iterable[Station], *, products: Iterable[str]
+    ) -> Iterable[Station]:
         wanted = set(products)
 
         for item in collection:
-            known = {x for x in item["Products"] if item["Products"][x]}
+            known = {x for x in item.products if item.products[x]}
             matches = wanted.intersection(known)
             if matches:
-                tmp = {k: item["Products"][k] for k in matches}
-                item["Products"] = tmp
+                tmp = {k: item.products[k] for k in matches}
+                item.products = tmp
                 yield item
 
     def _filter_by_distance(
-        self, collection, *, max_distance: float, user_lat_lng: Tuple[float, float]
-    ):
+        self,
+        collection: Iterable[Station],
+        *,
+        max_distance: float,
+        user_lat_lng: Tuple[float, float],
+    ) -> Iterable[Station]:
         def _transform(item):
             distance = haversine.haversine(
-                (item["Location"]["Latitude"], item["Location"]["Longuitude"]),
+                (item.location.latitude, item.location.longuitude),
                 user_lat_lng,
                 unit=haversine.Unit.KILOMETERS,
             )
-
-            item["Location"]["Distance"] = distance
+            item.location.distance = distance
             return item
 
         def _filter(item):
-            return item["Location"]["Distance"] <= max_distance
+            return item.location.distance <= max_distance
 
         for item in collection:
             item = _transform(item)
             if _filter(item):
                 yield item
 
-    def parse_item(self, item):
+    def parse_item(self, item: Dict[str, Any]) -> Station:
         def _float(s):
             return float(s.replace(",", "."))
 
@@ -141,19 +172,20 @@ class CarbuAPI:
         for k in lng_keys:
             del item[k]
 
-        ret = {
-            "Station": item.pop("Rótulo", None),
-            "Products": dict(products),
-            "Location": {
-                "Latitude": _float(item.pop("Latitud")),
-                "Longuitude": _float(longuitude),
-                "City": item.pop("Municipio").capitalize(),  # Localidad?
-                "Province": item.pop("Provincia").capitalize(),
-                "Address": item.pop("Dirección").capitalize(),
-                "Distance": None,
-            },
-            "Misc": item,
-        }
+        ret = Station(
+            name=item.pop("Rótulo"),
+            code=item.pop("IDEESS"),
+            products=dict(products),
+            location=Location(
+                latitude=_float(item.pop("Latitud")),
+                longuitude=_float(longuitude),
+                city=item.pop("Municipio").capitalize(),  # Localidad?
+                province=item.pop("Provincia").capitalize(),
+                address=item.pop("Dirección").capitalize(),
+                distance=None,
+            ),
+            misc=item,
+        )
 
         return ret
 

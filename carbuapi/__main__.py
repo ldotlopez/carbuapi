@@ -20,10 +20,22 @@
 
 import argparse
 import sys
-from pprint import pprint as pp
+import json
+import datetime
+import dataclasses
 
-from . import CarbuAPI
+from . import CarbuAPI, Station, QueryResult, Location
 from .consts import PRODUCTS
+
+
+def json_helper(obj):
+    if isinstance(obj, datetime.datetime):
+        return str(obj)
+
+    elif isinstance(obj, (Station, QueryResult, Location)):
+        return dataclasses.asdict(obj)
+
+    raise TypeError(obj.__class__)
 
 
 def main():
@@ -74,12 +86,18 @@ def main():
         user_lat_lng = None
 
     api = CarbuAPI()
-    pp(
-        api.query(
-            codprov=args.codprov,
-            products=products,
-            max_distance=args.max_distance,
-            user_lat_lng=user_lat_lng,
+    results = api.query(
+        codprov=args.codprov,
+        products=products,
+        max_distance=args.max_distance,
+        user_lat_lng=user_lat_lng,
+    )
+
+    print(
+        json.dumps(
+            results,
+            default=json_helper,
+            indent=4,
         )
     )
 
