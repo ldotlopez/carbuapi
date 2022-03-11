@@ -67,6 +67,14 @@ def main():
         help="User longuitude",
         required=False,
     )
+    parser.add_argument(
+        "--sort-by",
+        type=str,
+        required=False,
+        choices=["distance", "price"],
+        default="distance",
+        help="Sort by distance or price (pirce of first selected product)",
+    )
 
     args = parser.parse_args()
 
@@ -85,6 +93,14 @@ def main():
     else:
         user_lat_lng = None
 
+    if args.sort_by == "distance" and not user_lat_lng:
+        print("Sort by distance requires to specify position", file=sys.stderr)
+        return 1
+
+    if args.sort_by == "price" and not products:
+        print("Sort by price requires to specify a product", file=sys.stderr)
+        return 1
+
     api = CarbuAPI()
     results = api.query(
         codprov=args.codprov,
@@ -92,6 +108,14 @@ def main():
         max_distance=args.max_distance,
         user_lat_lng=user_lat_lng,
     )
+
+    if args.sort_by == "distance":
+        results.stations = sorted(results.stations, key=lambda x: x.location.distance)
+
+    elif args.sort_by == "price":
+        results.stations = sorted(
+            results.stations, key=lambda x: x.products[products[0]]
+        )
 
     print(
         json.dumps(

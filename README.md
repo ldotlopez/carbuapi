@@ -14,13 +14,10 @@ Inspirado por la crisis de los precios energéticos de 2022 y este post de [domo
 
 ✅ Filtrado por provincia, producto (i. ex. Gasolina 95, Gasoil A, etc…) y distancia del usuario (requiere localización base).
 
+✅ Ordenación por distancia o precio
+
 **Por implementar**
 
 ❌ Caché.
 
 ❌ Interfaz asíncrono.
-
-❌ Ordenación por los criterios de búsqueda.
-
-
-

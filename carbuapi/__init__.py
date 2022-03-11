@@ -62,31 +62,15 @@ class QueryResult:
 
 
 class CarbuAPI:
-    def build_url(self, *, codprov: Optional[str] = None):
+    def build_url(self, *, codprov: Optional[str] = None) -> str:
         filters = {}
+
         if codprov:
             filters["FiltroProvincia"] = codprov
 
-        filtersstr = "/".join([f"{k}/{v}" for (k, v) in filters.items()])
+        filters_fragment = "/".join([f"{k}/{v}" for (k, v) in filters.items()])
 
-        return BASE_URL.format(filters=filtersstr)
-
-    def fetch(self, url: str) -> str:
-        return requests.get(url).text
-
-    def parse(self, buff: str) -> QueryResult:
-        data = json.loads(buff)
-
-        resultcode = data.get("ResultadoConsulta", "").upper()
-        if resultcode != "OK":
-            raise DataError(f"ResultadoConsulta: {resultcode}")
-
-        ret = QueryResult(
-            date=datetime.datetime.strptime(data["Fecha"], "%d/%m/%Y %H:%M:%S"),
-            advisory=data.get("Nota"),
-            stations=[self.parse_item(x) for x in data["ListaEESSPrecio"]],
-        )
-        return ret
+        return BASE_URL.format(filters=filters_fragment)
 
     def query(
         self,
@@ -154,6 +138,23 @@ class CarbuAPI:
             item = _transform(item)
             if _filter(item):
                 yield item
+
+    def fetch(self, url: str) -> str:
+        return requests.get(url).text
+
+    def parse(self, buff: str) -> QueryResult:
+        data = json.loads(buff)
+
+        resultcode = data.get("ResultadoConsulta", "").upper()
+        if resultcode != "OK":
+            raise DataError(f"ResultadoConsulta: {resultcode}")
+
+        ret = QueryResult(
+            date=datetime.datetime.strptime(data["Fecha"], "%d/%m/%Y %H:%M:%S"),
+            advisory=data.get("Nota"),
+            stations=[self.parse_item(x) for x in data["ListaEESSPrecio"]],
+        )
+        return ret
 
     def parse_item(self, item: Dict[str, Any]) -> Station:
         def _float(s):
