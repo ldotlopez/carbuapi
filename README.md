@@ -2,11 +2,25 @@
 
 [![Upload Python Package](https://github.com/ldotlopez/carbuapi/actions/workflows/python-publish.yml/badge.svg)](https://github.com/ldotlopez/carbuapi/actions/workflows/python-publish.yml)
 
-Access to [https://sedeaplicaciones.minetur.gob.es/](https://sedeaplicaciones.minetur.gob.es/) fuel prices (Spain)
+> _Since 99.9% potential users of this code are spanish speakers this README and associated docs are written in spanish. However contributions are welcomed._
 
-**Useful links**
+Módulo de consulta a los datos abiertos sobre precios de carburantes del Ministerio de Consumo del gobierno de España: [https://sede.serviciosmin.gob.es/es-ES/datosabiertos/catalogo/precios-carburantes](https://sede.serviciosmin.gob.es/es-ES/datosabiertos/catalogo/precios-carburantes)
 
-  * [Related Home-Assistant component](https://github.com/ldotlopez/ha-carbuapi)
-  * Inspired by:
-    - [https://domology.es/sensor-del-precio-de-la-gasolina-diesel-en-ha/](https://domology.es/sensor-del-precio-de-la-gasolina-diesel-en-ha/)
-    - Petrol prices crisis from 2022
+Inspirado por la crisis de los precios energéticos de 2022 y este post de [domology.es](https://domology.es/sensor-del-precio-de-la-gasolina-diesel-en-ha/).
+
+**Características**
+
+✅ Consulta de precios sobre todas las gasolineras de España.
+
+✅ Filtrado por provincia, producto (i. ex. Gasolina 95, Gasoil A, etc…) y distancia del usuario (requiere localización base).
+
+**Por implementar**
+
+❌ Caché.
+
+❌ Interfaz asíncrono.
+
+❌ Ordenación por los criterios de búsqueda.
+
+
+
