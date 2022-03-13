@@ -73,7 +73,10 @@ def main():
         required=False,
         choices=["distance", "price"],
         default="distance",
-        help="Sort by distance or price (pirce of first selected product)",
+        help=(
+            "Sort by distance or price (sort by price selects the minimum price of "
+            "all products)"
+        ),
     )
 
     args = parser.parse_args()
@@ -114,7 +117,7 @@ def main():
 
     elif args.sort_by == "price":
         results.stations = sorted(
-            results.stations, key=lambda x: x.products[products[0]]
+            results.stations, key=lambda x: min(x.products.values())
         )
 
     print(
