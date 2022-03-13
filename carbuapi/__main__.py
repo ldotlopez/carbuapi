@@ -72,7 +72,7 @@ def main():
         type=str,
         required=False,
         choices=["distance", "price"],
-        default="distance",
+        default="price",  # default to price since it doesn't require user position
         help=(
             "Sort by distance or price (sort by price selects the minimum price of "
             "all products)"

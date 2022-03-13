@@ -72,16 +72,16 @@ class CarbuAPI:
 
         return BASE_URL.format(filters=filters_fragment)
 
-    def query(
+    def _query_from_buffer(
         self,
+        buffer,
         *,
         codprov: Optional[str] = None,
         products: Optional[List[str]] = None,
         max_distance: Optional[float] = None,
         user_lat_lng: Optional[Tuple[float, float]],
     ):
-        url = self.build_url(codprov=codprov)
-        buffer = self.fetch(url)
+
         data = self.parse(buffer)
 
         if products is None and max_distance is None:
@@ -101,6 +101,24 @@ class CarbuAPI:
 
         data.stations = list(tmp)
         return data
+
+    def query(
+        self,
+        *,
+        codprov: Optional[str] = None,
+        products: Optional[List[str]] = None,
+        max_distance: Optional[float] = None,
+        user_lat_lng: Optional[Tuple[float, float]],
+    ):
+        url = self.build_url(codprov=codprov)
+        buffer = self.fetch(url)
+        return self._query_from_buffer(
+            buffer,
+            codprov=codprov,
+            products=products,
+            max_distance=max_distance,
+            user_lat_lng=user_lat_lng,
+        )
 
     def _filter_by_products(
         self, collection: Iterable[Station], *, products: Iterable[str]
