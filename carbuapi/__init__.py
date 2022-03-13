@@ -40,7 +40,7 @@ class Location:
     address: str
     city: str
     latitude: float
-    longuitude: float
+    longitude: float
     province: str
     distance: Optional[float] = None
 
@@ -142,7 +142,7 @@ class CarbuAPI:
     ) -> Iterable[Station]:
         def _transform(item):
             distance = haversine.haversine(
-                (item.location.latitude, item.location.longuitude),
+                (item.location.latitude, item.location.longitude),
                 user_lat_lng,
                 unit=haversine.Unit.KILOMETERS,
             )
@@ -183,10 +183,10 @@ class CarbuAPI:
             if k.startswith("Precio "):
                 del item[k]
 
-        # Get longuitude keys
+        # Get longitude keys
         lng_keys = [k for k in item if k.lower().startswith("longitud")]
         lng_keys = list(sorted(lng_keys, key=lambda x: len(x)))
-        longuitude = item[lng_keys[0]]
+        longitude = item[lng_keys[0]]
 
         for k in lng_keys:
             del item[k]
@@ -197,7 +197,7 @@ class CarbuAPI:
             products=dict(products),
             location=Location(
                 latitude=_float(item.pop("Latitud")),
-                longuitude=_float(longuitude),
+                longitude=_float(longitude),
                 city=item.pop("Municipio").capitalize(),  # Localidad?
                 province=item.pop("Provincia").capitalize(),
                 address=item.pop("Dirección").capitalize(),
